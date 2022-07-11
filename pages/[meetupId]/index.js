@@ -1,18 +1,20 @@
-import { Fragment } from "react";
-import MeetupDetail from "../../components/meetups/meetupDetail";
-import { MongoClient, ObjectId } from "mongodb";
-import Head from "next/head";
+import { MongoClient, ObjectId } from 'mongodb';
+import { Fragment } from 'react';
+import Head from 'next/head';
+
+import MeetupDetail from '../../components/meetups/MeetupDetail';
 
 function MeetupDetails(props) {
   return (
     <Fragment>
       <Head>
-          <title>{props.meetupData.title}</title>
+        <title>{props.meetupData.title}</title>
+        <meta name='description' content={props.meetupData.description} />
       </Head>
       <MeetupDetail
         image={props.meetupData.image}
         title={props.meetupData.title}
-        adress={props.meetupData.adress}
+        address={props.meetupData.address}
         description={props.meetupData.description}
       />
     </Fragment>
@@ -21,18 +23,18 @@ function MeetupDetails(props) {
 
 export async function getStaticPaths() {
   const client = await MongoClient.connect(
-    "mongodb+srv://amel123:123@cluster0.cnozerd.mongodb.net/?retryWrites=true&w=majority"
+    'mongodb+srv://amel123:123@cluster0.cnozerd.mongodb.net/?retryWrites=true&w=majority'
   );
-  const database = client.db();
+  const db = client.db();
 
-  const meetupsCollection = database.collection("meetups");
-  const meetups = await meetupsCollection.find().toArray();
-  /*  console.log(meetups) */
-  const justIds = meetups.map((meetup) => meetup._id.toString());
+  const meetupsCollection = db.collection('meetups');
+
+  const meetups = await meetupsCollection.find({}, { _id: 1 }).toArray();
+
   client.close();
 
   return {
-    fallback: false,
+    fallback: 'blocking',
     paths: meetups.map((meetup) => ({
       params: { meetupId: meetup._id.toString() },
     })),
@@ -40,18 +42,21 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps(context) {
+  // fetch data for a single meetup
+
   const meetupId = context.params.meetupId;
 
   const client = await MongoClient.connect(
-    "mongodb+srv://amel123:123@cluster0.cnozerd.mongodb.net/?retryWrites=true&w=majority"
+    'mongodb+srv://amel123:123@cluster0.cnozerd.mongodb.net/?retryWrites=true&w=majority'
   );
-  const database = client.db();
-  const meetupsCollection = database.collection("meetups");
+  const db = client.db();
+
+  const meetupsCollection = db.collection('meetups');
 
   const selectedMeetup = await meetupsCollection.findOne({
     _id: ObjectId(meetupId),
   });
-  console.log(selectedMeetup);
+
   client.close();
 
   return {
